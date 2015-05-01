@@ -14,5 +14,5 @@ order by transaction_id desc limit 100;
 select close_session('ec2-rpt-e1b-dat-rdb-92677:0xa5345');
 
 select close_session('ec2-rpt-e1b-dat-rdb-7341:0x40367');
-
+--shuwei
 --jason
