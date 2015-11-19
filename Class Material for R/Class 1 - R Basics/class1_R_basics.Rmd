@@ -1,0 +1,82 @@
+---
+title: 'Class 1: R Basics'
+author: "Jason Jea"
+date: "October 9, 2015"
+output: html_document
+---
+<br>
+<br>
+
+
+The **R Basics** class is intended to allow the user to begin to do the most basic data analysis tasks: setting up data sources, subsetting and selecting data, filtering data based on conditions, and performing basic mutations on data.  
+
+The class outline is as follows:
+--------------------------------
+
+1. How can I read in data to R?
+    + read.csv, read.table
+    + odbc connections (Vertica)
+    + postgres connections (Redshift)
+2. What are the primary data structures used in R?
+    + vectors
+    + dataframes
+    + lists
+3. How do I edit and access these primary data structures in R?
+    + bracket notation
+
+<br>
+Reading Data into R:
+---------------------
+The easiest way to read data into R is through a text file.  The **read.table()** function allows us to read any delimited text file:
+
+```{r}
+trendedMAUs <- read.table("trendedmaus.csv", header = TRUE, sep=",")
+
+head(trendedMAUs)
+```
+
+If your file is comma delimited, there's a wrapper function **read.csv()** that has the *sep* parameter set to "," as default.
+It's also important to remember that the file path is defaulted to your session working directory, which you can find using **getwd()**.  If your file is in a different folder than your working directory, you can either hard code the file path into the first parameter, or you can set your session's working directory to point to the file.:
+
+```{r}
+getwd()
+
+trendedMAUs <- read.csv("C:/Users/jjea/Desktop/RMN/Code Repository/shared/Class Material for R/Class 1 - R Basics/trendedmaus.csv")
+```
+OR
+```{r}
+setwd("C:/Users/jjea/Desktop/RMN/Code Repository/shared/Class Material for R/Class 1 - R Basics")
+trendedMAUs <- read.csv("trendedmaus.csv")
+```
+
+<br>
+It's worth pointing out that both **<-** and **=** work as assignment operators.  However, **<-** in general makes your code easier to read, and there are some extreme edge cases where **=** won't work.
+
+<br>
+For many of us though, setting up a csv file requires exporting out of some data store as a csv, then importing into R.  At best, this is tedious, at worst, this is close to impossible because of the size of data (exporting an 8 gig csv out of DBVisualizer is no small feat).  Instead, it's generally much quicker to read data directly out of a database.  
+
+Fortunately, this is a common problem across any field pertaining data analysis, and there are many packages that have been developed to address this use case.  Much of RMN's queryable datasets reside in Redshift data marts, and so we can use the **RPostgreSQL** library to aid our cause.
+```
+install.packages("RPostgreSQL")
+```
+```{r}
+library(RPostgreSQL)
+
+drv <- dbDriver("PostgreSQL")
+
+redshift <- dbConnect(drv, host = 'rsh-rpt-se1-dat-rdb-mem-prd.c2vtvr6b5gso.us-east-1.redshift.amazonaws.com', dbname = 'members',user = "rmn_jjea", password = "182493Superman.",port='5439')
+```
+
+<br>
+The **dbConnect()** returns a database connection object that we can call anytime we want to query from this database in the future.  So instead of running my query in a database querying tool and exporting it as a csv, I can return the results of my query directly into R:
+
+```{r}
+trendedMAUs <- dbGetQuery(redshift, "select date,platform,sum(value)
+                                    from bi_work.kpi_daily
+                                    where kpi = 'MAU'  and membertype = 'all' and 
+                                          platform in ('ios-app','android-app') and state = 'all'
+                                    group by 1,2
+                                    ;")
+```
+
+

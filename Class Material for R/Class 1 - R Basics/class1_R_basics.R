@@ -1,0 +1,16 @@
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(reshape2)
+library(RODBC)
+library(RJDBC)
+library(RPostgreSQL)
+library(tidyr)
+library(lubridate)
+library(rmarkdown)
+library(scales)
+library(RColorBrewer)
+library(stringr)
+
+
+read.csv("trendedmaus.csv")
